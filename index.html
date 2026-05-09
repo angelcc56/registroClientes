@@ -48,6 +48,15 @@
             </span>
             <span class="btn-theme__text">Oscuro</span>
           </button>
+          <button
+            type="button"
+            class="btn btn-primary btn-refresh px-3"
+            id="btnAbrirModalAlta"
+            data-bs-toggle="modal"
+            data-bs-target="#modalAltaPaciente"
+          >
+            Nuevo registro
+          </button>
           <button type="button" id="btnRefrescar" class="btn btn-primary btn-refresh px-3">
             Actualizar lista
           </button>
@@ -57,89 +66,12 @@
   </header>
 
   <main class="container py-4 flex-grow-1">
-    <section class="card surface-card mb-4 form-modulo" aria-labelledby="titulo-alta">
-      <div class="card-header-app">
-        <h2 id="titulo-alta" class="h5 mb-0 app-heading">Registrar nuevo paciente</h2>
-        <p class="small app-muted mb-0 mt-2">
-          El código del paciente y la fecha de ingreso los asigna el servidor al guardar.
+    <section class="card surface-card mb-4" aria-labelledby="titulo-panel">
+      <div class="card-body py-4 px-4">
+        <h2 id="titulo-panel" class="h5 mb-1 app-heading">Gestión de pacientes</h2>
+        <p class="small app-muted mb-0">
+          Use <strong class="app-heading">Nuevo registro</strong> en la barra superior para abrir el formulario. El servidor asigna el código y la fecha de ingreso.
         </p>
-      </div>
-      <div class="card-body p-4">
-        <div id="alertaAlta" class="alert alert-alta d-none mb-4" role="status" aria-live="assertive">
-          <div class="alert-alta__fila">
-            <span id="alertaAltaIcon" class="alert-alta__icon" aria-hidden="true"></span>
-            <div class="alert-alta__texto">
-              <strong id="alertaAltaTitulo" class="alert-alta__titulo"></strong>
-              <div id="alertaAltaDetalle" class="alert-alta__detalle small"></div>
-            </div>
-          </div>
-        </div>
-        <form id="formAltaPaciente" novalidate>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label for="altaNombre" class="form-label form-label-app">Nombre completo <span class="text-danger">*</span></label>
-              <input
-                type="text"
-                class="form-control form-control-app"
-                id="altaNombre"
-                name="nombre"
-                required
-                autocomplete="name"
-                minlength="2"
-                maxlength="200"
-                aria-describedby="helpNombre"
-                placeholder="Ej. María López García"
-              />
-              <div class="invalid-feedback" id="feedbackNombre">Revise el nombre según las reglas indicadas.</div>
-              <div id="helpNombre" class="form-text form-text-app">Obligatorio: entre 2 y 200 caracteres. Solo letras (incl. ñ/acentos), espacios, apóstrofo o guion.</div>
-            </div>
-            <div class="col-md-6">
-              <label for="altaGravedad" class="form-label form-label-app">Gravedad (1–5) <span class="text-danger">*</span></label>
-              <select class="form-select form-control-app" id="altaGravedad" name="gravedad" required aria-describedby="helpGravedad">
-                <option value="" disabled selected>Elija nivel…</option>
-                <option value="1">1 — Estable</option>
-                <option value="2">2 — Leve</option>
-                <option value="3">3 — Moderado</option>
-                <option value="4">4 — Grave</option>
-                <option value="5">5 — Crítico</option>
-              </select>
-              <div class="invalid-feedback" id="feedbackGravedad">Debe elegir un nivel del 1 (estable) al 5 (crítico).</div>
-              <div id="helpGravedad" class="form-text form-text-app">Valor entero obligatorio; debe coincidir con la escala clínica del hospital.</div>
-            </div>
-            <div class="col-md-6">
-              <label for="altaEstado" class="form-label form-label-app">Estado <span class="text-danger">*</span></label>
-              <select class="form-select form-control-app" id="altaEstado" name="estado" required aria-describedby="helpEstado">
-                <option value="" disabled selected>Elija estado…</option>
-                <option value="En espera">En espera</option>
-                <option value="Atendido">Atendido</option>
-                <option value="Derivado">Derivado</option>
-              </select>
-              <div class="invalid-feedback" id="feedbackEstado">Elija uno de los estados válidos: En espera, Atendido o Derivado.</div>
-              <div id="helpEstado" class="form-text form-text-app">Debe ser exactamente uno de los valores permitidos por la API.</div>
-            </div>
-            <div class="col-md-6">
-              <label for="altaCarnet" class="form-label form-label-app">Médico responsable (carnet) <span class="text-danger">*</span></label>
-              <select class="form-select form-control-app" id="altaCarnet" name="carnetMedico" required aria-describedby="helpCarnet">
-                <option value="" disabled selected>Elija médico…</option>
-                <option value="MED-1010">MED-1010</option>
-                <option value="MED-2020">MED-2020</option>
-                <option value="MED-3030">MED-3030</option>
-                <option value="MED-4040">MED-4040</option>
-                <option value="MED-5050">MED-5050</option>
-              </select>
-              <div class="invalid-feedback" id="feedbackCarnet">Seleccione un médico de la lista autorizada.</div>
-              <div id="helpCarnet" class="form-text form-text-app">Solo carnets registrados en el sistema (MED-1010 … MED-5050).</div>
-            </div>
-          </div>
-          <div class="d-flex flex-wrap gap-2 mt-4">
-            <button type="submit" class="btn btn-primary btn-refresh" id="btnGuardarPaciente">
-              Guardar paciente
-            </button>
-            <button type="reset" class="btn btn-outline-secondary btn-reset-app" id="btnLimpiarForm">
-              Limpiar
-            </button>
-          </div>
-        </form>
       </div>
     </section>
 
@@ -196,6 +128,96 @@
       </p>
     </div>
   </main>
+
+  <div
+    class="modal fade modal-app"
+    id="modalAltaPaciente"
+    tabindex="-1"
+    aria-labelledby="modalAltaTitulo"
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+      <div class="modal-content modal-app__content">
+        <div class="modal-header modal-app__header">
+          <div>
+            <h5 class="modal-title modal-app__title" id="modalAltaTitulo">Registrar paciente</h5>
+            <p class="modal-app__subtitle small mb-0">Complete todos los campos. Los errores se muestran aquí y bajo cada campo.</p>
+          </div>
+          <button type="button" class="btn-close modal-app__close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body modal-app__body">
+          <div id="modalAltaFeedback" class="modal-feedback d-none" role="alert" aria-live="assertive"></div>
+          <form id="formAltaPaciente" novalidate>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="altaNombre" class="form-label form-label-app">Nombre completo <span class="text-danger">*</span></label>
+                <input
+                  type="text"
+                  class="form-control form-control-app"
+                  id="altaNombre"
+                  name="nombre"
+                  required
+                  autocomplete="name"
+                  minlength="2"
+                  maxlength="200"
+                  aria-describedby="helpNombre"
+                  placeholder="Ej. María López García"
+                />
+                <div class="invalid-feedback" id="feedbackNombre">Revise el nombre según las reglas indicadas.</div>
+                <div id="helpNombre" class="form-text form-text-app">Entre 2 y 200 caracteres. Letras (ñ/acentos), espacios, apóstrofo o guion.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="altaGravedad" class="form-label form-label-app">Gravedad (1–5) <span class="text-danger">*</span></label>
+                <select class="form-select form-control-app" id="altaGravedad" name="gravedad" required aria-describedby="helpGravedad">
+                  <option value="" disabled selected>Elija nivel…</option>
+                  <option value="1">1 — Estable</option>
+                  <option value="2">2 — Leve</option>
+                  <option value="3">3 — Moderado</option>
+                  <option value="4">4 — Grave</option>
+                  <option value="5">5 — Crítico (cupo limitado en espera)</option>
+                </select>
+                <div class="invalid-feedback" id="feedbackGravedad">Debe elegir un nivel del 1 al 5.</div>
+                <div id="helpGravedad" class="form-text form-text-app">Si elige 5 y el hospital está al límite de cupos, verá un aviso al guardar.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="altaEstado" class="form-label form-label-app">Estado <span class="text-danger">*</span></label>
+                <select class="form-select form-control-app" id="altaEstado" name="estado" required aria-describedby="helpEstado">
+                  <option value="" disabled selected>Elija estado…</option>
+                  <option value="En espera">En espera</option>
+                  <option value="Atendido">Atendido</option>
+                  <option value="Derivado">Derivado</option>
+                </select>
+                <div class="invalid-feedback" id="feedbackEstado">Elija un estado válido.</div>
+                <div id="helpEstado" class="form-text form-text-app">Valores exactos exigidos por la API.</div>
+              </div>
+              <div class="col-md-6">
+                <label for="altaCarnet" class="form-label form-label-app">Médico responsable <span class="text-danger">*</span></label>
+                <select class="form-select form-control-app" id="altaCarnet" name="carnetMedico" required aria-describedby="helpCarnet">
+                  <option value="" disabled selected>Elija carnet…</option>
+                  <option value="MED-1010">MED-1010</option>
+                  <option value="MED-2020">MED-2020</option>
+                  <option value="MED-3030">MED-3030</option>
+                  <option value="MED-4040">MED-4040</option>
+                  <option value="MED-5050">MED-5050</option>
+                </select>
+                <div class="invalid-feedback" id="feedbackCarnet">Seleccione un médico autorizado.</div>
+                <div id="helpCarnet" class="form-text form-text-app">Carnets oficiales del hospital.</div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer modal-app__footer flex-wrap gap-2">
+          <button type="button" class="btn btn-reset-app" id="btnLimpiarForm">Limpiar formulario</button>
+          <div class="ms-auto d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-cerrar-modal" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" form="formAltaPaciente" class="btn btn-primary btn-refresh" id="btnGuardarPaciente">
+              Guardar paciente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <footer class="app-footer mt-auto py-4">
     <div class="container small app-muted text-center">
