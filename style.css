@@ -851,6 +851,18 @@ body.app-body {
   color: var(--text-muted);
 }
 
+.firma-alumno__persona {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.firma-alumno__persona + .firma-alumno__persona {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
 .firma-alumno__nombre {
   font-size: 0.8125rem;
   font-weight: 700;
