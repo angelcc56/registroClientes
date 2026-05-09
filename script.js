@@ -20,6 +20,8 @@
     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const ICON_ALERTA_ERR =
     '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 8v5M12 16h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const ICON_ALERTA_WARN =
+    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   let todosLosPacientes = [];
   let paginaActual = 1;
@@ -38,10 +40,9 @@
     iconTemaSol: document.querySelector(".btn-theme__icon--sun"),
     textTema: document.querySelector(".btn-theme__text"),
     formAlta: document.getElementById("formAltaPaciente"),
-    alertaAlta: document.getElementById("alertaAlta"),
-    alertaAltaTitulo: document.getElementById("alertaAltaTitulo"),
-    alertaAltaDetalle: document.getElementById("alertaAltaDetalle"),
-    alertaAltaIcon: document.getElementById("alertaAltaIcon"),
+    modalAlta: document.getElementById("modalAltaPaciente"),
+    modalAltaFeedback: document.getElementById("modalAltaFeedback"),
+    modalAppContent: document.querySelector("#modalAltaPaciente .modal-app__content"),
     toastExito: document.getElementById("toastExito"),
     toastExitoTexto: document.querySelector("#toastExito .toast-exito__texto"),
     altaNombre: document.getElementById("altaNombre"),
@@ -132,21 +133,20 @@
     nodo.classList.add("alert-animate-in");
   }
 
-  function ocultarAlertaAlta() {
-    el.alertaAlta.classList.remove("alert-animate-in");
-    el.alertaAlta.classList.add("d-none");
-    el.alertaAltaTitulo.textContent = "";
-    el.alertaAltaDetalle.innerHTML = "";
-    el.alertaAltaIcon.innerHTML = "";
-    el.alertaAlta.classList.remove("alert-app-success", "alert-app-danger");
+  function ocultarFeedbackModal() {
+    if (!el.modalAltaFeedback) return;
+    el.modalAltaFeedback.classList.remove("alert-animate-in");
+    el.modalAltaFeedback.classList.add("d-none");
+    el.modalAltaFeedback.innerHTML = "";
+    el.modalAltaFeedback.className = "modal-feedback d-none";
   }
 
   /**
-   * @param {"success"|"error"} tipo
+   * @param {"error"|"warning"} variant
    * @param {string} titulo
-   * @param {string|string[]} cuerpo  Una o varias líneas de detalle
+   * @param {string|string[]} cuerpo
    */
-  function mostrarAlertaAlta(tipo, titulo, cuerpo) {
+  function mostrarFeedbackModal(variant, titulo, cuerpo) {
     const lineas = Array.isArray(cuerpo)
       ? cuerpo.filter(function (s) {
           return s != null && String(s).trim() !== "";
@@ -155,28 +155,133 @@
         ? [String(cuerpo)]
         : [];
 
-    el.alertaAltaTitulo.textContent = titulo || (tipo === "success" ? "Correcto" : "Atención");
-    el.alertaAltaDetalle.innerHTML = "";
+    const v = variant === "warning" ? "warning" : "error";
+    const iconHtml = v === "warning" ? ICON_ALERTA_WARN : ICON_ALERTA_ERR;
+
+    el.modalAltaFeedback.className = "modal-feedback modal-feedback--" + v;
+    el.modalAltaFeedback.classList.remove("d-none");
+    el.modalAltaFeedback.innerHTML = "";
+
+    const inner = document.createElement("div");
+    inner.className = "modal-feedback__inner";
+
+    const iconWrap = document.createElement("span");
+    iconWrap.className = "modal-feedback__icon";
+    iconWrap.setAttribute("aria-hidden", "true");
+    iconWrap.innerHTML = iconHtml;
+
+    const textWrap = document.createElement("div");
+    textWrap.className = "modal-feedback__text";
+
+    const tituloEl = document.createElement("strong");
+    tituloEl.className = "modal-feedback__titulo";
+    tituloEl.textContent = titulo || (v === "warning" ? "Aviso" : "Error");
+
+    textWrap.appendChild(tituloEl);
     lineas.forEach(function (linea) {
       const p = document.createElement("p");
-      p.className = "mb-1";
+      p.className = "modal-feedback__linea small mb-0 mt-2";
       p.textContent = linea;
-      el.alertaAltaDetalle.appendChild(p);
+      textWrap.appendChild(p);
     });
 
-    el.alertaAltaIcon.innerHTML =
-      tipo === "success" ? ICON_ALERTA_OK : ICON_ALERTA_ERR;
+    inner.appendChild(iconWrap);
+    inner.appendChild(textWrap);
+    el.modalAltaFeedback.appendChild(inner);
 
-    el.alertaAlta.classList.remove("alert-app-success", "alert-app-danger", "d-none");
-    el.alertaAlta.classList.add(
-      tipo === "success" ? "alert-app-success" : "alert-app-danger"
-    );
     requestAnimationFrame(function () {
-      animarEntradaAlerta(el.alertaAlta);
+      animarEntradaAlerta(el.modalAltaFeedback);
       try {
-        el.alertaAlta.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        el.modalAltaFeedback.scrollIntoView({ behavior: "smooth", block: "nearest" });
       } catch (_) {}
     });
+  }
+
+  function obtenerEtiquetasCamposInvalidos(form) {
+    const invalid = form.querySelectorAll(":invalid");
+    const seen = {};
+    const out = [];
+    invalid.forEach(function (inp) {
+      if (inp.type === "hidden") return;
+      const lab = form.querySelector('label[for="' + inp.id + '"]');
+      let txt = lab
+        ? lab.textContent.replace(/\*/g, "").replace(/\s+/g, " ").trim()
+        : inp.name || inp.id;
+      const short = txt.split("—")[0].trim();
+      if (short && !seen[short]) {
+        seen[short] = true;
+        out.push(short);
+      }
+    });
+    return out;
+  }
+
+  /**
+   * Mensajes claros según respuesta HTTP (incl. cupo gravedad 5 y médico no autorizado).
+   */
+  function interpretarErrorAlta(status, mensajeRaw) {
+    const mensaje = String(mensajeRaw || "").trim();
+    const lower = mensaje.toLowerCase();
+
+    if (status === 401) {
+      return {
+        variant: "warning",
+        titulo: "Médico no autorizado",
+        lineas: [
+          mensaje || "El carnet no figura en la lista de médicos habilitados.",
+          "Seleccione otro carnet (MED-1010 … MED-5050) y vuelva a intentar.",
+        ],
+      };
+    }
+
+    if (status === 400) {
+      if (
+        lower.includes("capacidad") ||
+        lower.includes("máxima") ||
+        lower.includes("maxima") ||
+        lower.includes("crític") ||
+        lower.includes("critico") ||
+        lower.includes("redirección") ||
+        lower.includes("redireccion") ||
+        lower.includes("otro hospital") ||
+        lower.includes("cupo")
+      ) {
+        return {
+          variant: "warning",
+          titulo: "Cupo de pacientes críticos completo",
+          lineas: [
+            "El hospital ya tiene el máximo permitido de pacientes con gravedad 5 en estado «En espera».",
+            mensaje ||
+              "No se puede registrar más hasta que haya cupo o deba derivarse a otro centro.",
+            "Puede registrar con gravedad menor, cambiar el estado si aplica, o intentar más tarde.",
+          ],
+        };
+      }
+      return {
+        variant: "error",
+        titulo: "El servidor rechazó el registro",
+        lineas: [
+          mensaje || "Revise los datos enviados y cumpla las reglas de la API.",
+        ],
+      };
+    }
+
+    if (status === 404) {
+      return {
+        variant: "error",
+        titulo: "Recurso no encontrado",
+        lineas: [mensaje || "Compruebe la URL del servicio de pacientes."],
+      };
+    }
+
+    return {
+      variant: "error",
+      titulo: "No se pudo completar el registro",
+      lineas: [
+        mensaje || "Respuesta HTTP " + String(status) + ".",
+        "Si el problema continúa, revise la conexión o contacte al administrador.",
+      ],
+    };
   }
 
   function mostrarToastExito(texto) {
@@ -560,11 +665,14 @@
     };
     const errLocal = validarPayloadAlta(body);
     if (errLocal) {
-      mostrarAlertaAlta("error", "Revise los datos del formulario", errLocal);
+      mostrarFeedbackModal("error", "Datos incorrectos", [
+        errLocal,
+        "Corrija el campo correspondiente y vuelva a enviar.",
+      ]);
       return;
     }
 
-    ocultarAlertaAlta();
+    ocultarFeedbackModal();
     el.btnGuardarPaciente.disabled = true;
     el.btnGuardarPaciente.textContent = "Guardando…";
 
@@ -591,44 +699,21 @@
               "";
           }
         } catch (_) {}
-        const lineasExito = [
-          "El paciente se guardó correctamente en la base del hospital.",
-          "Nombre: " + body.nombre,
-        ];
-        if (codigo) {
-          lineasExito.push("Código asignado por el sistema: " + codigo);
-        }
-        lineasExito.push(
-          "Gravedad " +
-            body.gravedad +
-            " · Estado: " +
-            body.estado +
-            " · Médico responsable: " +
-            body.carnetMedico
-        );
-        lineasExito.push(
-          "La tabla de pacientes se actualizó automáticamente."
-        );
-
-        mostrarAlertaAlta("success", "¡Paciente creado con éxito!", lineasExito);
-
         const textoToast = codigo
-          ? "Paciente registrado: " + body.nombre + " (" + codigo + ")."
-          : "Paciente " + body.nombre + " registrado correctamente.";
+          ? "¡Listo! " + body.nombre + " registrado (" + codigo + ")."
+          : "¡Paciente registrado! " + body.nombre + ".";
+
+        ocultarFeedbackModal();
+        bootstrap.Modal.getOrCreateInstance(el.modalAlta).hide();
         mostrarToastExito(textoToast);
 
-        el.formAlta.reset();
-        el.formAlta.classList.remove("was-validated");
         await cargarPacientes();
         return;
       }
 
       const mensaje = await leerMensajeErrorApi(respuesta);
-      mostrarAlertaAlta(
-        "error",
-        "No se pudo registrar el paciente",
-        mensaje
-      );
+      const info = interpretarErrorAlta(respuesta.status, mensaje);
+      mostrarFeedbackModal(info.variant, info.titulo, info.lineas);
     } catch (err) {
       const detalle = err instanceof Error ? err.message : String(err);
       const esRed =
@@ -636,12 +721,15 @@
         (detalle === "Failed to fetch" ||
           detalle.includes("fetch") ||
           detalle.includes("NetworkError"));
-      mostrarAlertaAlta(
+      mostrarFeedbackModal(
         "error",
-        esRed ? "Error de conexión" : "Error inesperado",
+        esRed ? "Sin conexión con el servidor" : "Error inesperado",
         esRed
-          ? "No se pudo contactar la API (red o CORS). Revise la consola o la pestaña Red."
-          : detalle
+          ? [
+              "No se pudo contactar la API (red, firewall o CORS).",
+              "Abra la pestaña «Red» (F12), confirme la URL y que use un servidor local para el HTML.",
+            ]
+          : [detalle]
       );
     } finally {
       el.btnGuardarPaciente.disabled = false;
@@ -659,17 +747,41 @@
     sincronizarTodoFormularioAlta();
     if (!el.formAlta.checkValidity()) {
       el.formAlta.classList.add("was-validated");
+      const labels = obtenerEtiquetasCamposInvalidos(el.formAlta);
+      const lineas = [
+        "Hay campos obligatorios vacíos o con formato inválido (marcados en rojo).",
+      ];
+      if (labels.length) {
+        lineas.push("Complete o corrija: " + labels.join(", ") + ".");
+      }
+      mostrarFeedbackModal("error", "Faltan datos por completar", lineas);
       return;
     }
     crearPaciente();
   });
 
-  el.formAlta.addEventListener("reset", function () {
-    requestAnimationFrame(function () {
-      el.formAlta.classList.remove("was-validated");
-      ocultarAlertaAlta();
-      sincronizarTodoFormularioAlta();
-    });
+  el.btnLimpiarForm.addEventListener("click", function () {
+    el.formAlta.reset();
+    el.formAlta.classList.remove("was-validated");
+    ocultarFeedbackModal();
+    sincronizarTodoFormularioAlta();
+  });
+
+  el.modalAlta.addEventListener("show.bs.modal", function () {
+    ocultarFeedbackModal();
+    if (el.modalAppContent) {
+      el.modalAppContent.setAttribute(
+        "data-bs-theme",
+        getTheme() === "dark" ? "dark" : "light"
+      );
+    }
+  });
+
+  el.modalAlta.addEventListener("hidden.bs.modal", function () {
+    el.formAlta.reset();
+    el.formAlta.classList.remove("was-validated");
+    ocultarFeedbackModal();
+    sincronizarTodoFormularioAlta();
   });
 
   el.altaNombre.addEventListener("input", sincronizarValidezNombre);
